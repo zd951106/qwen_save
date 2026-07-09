@@ -1,0 +1,12 @@
+- [Works across multiple IDEA project windows](user/multi-project-workflow.md) — User runs several projects in parallel IDEA windows and expects cros…
+- [Backend and distributed systems expertise](user/profile.md) — User has strong backend knowledge — independently identifies cache consistency, Spri…
+- [Preauthorized execution, confirm approach first](feedback/preauthorize-all-operations.md) — Execute ops/tools without asking permission; but propose approach and wait for confirmation before non-trivial code changes
+- [wpgj-pay project reference](user/wpgj-pay-project.md) — Cross-project pointer: path F:\code\ysh\code\wpgj-pay, module structure, JUnit4 test co…
+- [open-sdk-java project reference](user/open-sdk-java-project.md) — SDK client for yinxiangpay: path, structure, test conventions, relationship to wpgj-pay
+- [Cross-project SDK testing pattern](user/cross-project-sdk-testing.md) — User writes integration tests in open-sdk-java that verify wpgj-pay's OpenSaaS APIs
+- [posx-tcs project reference](user/posx-tcs-project.md) — 对账结算平台: path F:\code\yinsheng\posx-tcs, 5模块, Java8/SpringBoot2.3.4, XXL-JOB+ShardingSphere+FreeMarker+POI
+- [需求设计与系统设计规范（跨项目通用）](feedback/requirement-design-spec.md) — 9部分32规范项+6补充章节(资金安全/高可用/灰度等)+提问模板+12条原则，已通用化
+- [通用规范关键词触发约定](feedback/spec-keyword-trigger.md) — 说"通用规范"/"通用系统设计规范"等关键词时主动引用规范文档
+- [Java/Spring编码规范技能参考](reference/java-spring-coder-skill.md) — 组长提供的编码规范+4份参考文档，编码阶段必须遵循，跨项目通用
+- [设计模板生成时加入业务理解](feedback/design-template-with-domain-insight.md) — 生成模板不只套规范，要针对特定业务场景补充专属章节
+- [整理需求/代码/笔记时分类保存到memory](feedback/organize-and-save-to-memory.md) — 整理后按类型存memory，未来"通用设计"时按类型参考生成模板

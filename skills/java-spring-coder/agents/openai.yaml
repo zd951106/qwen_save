@@ -1,0 +1,4 @@
+interface:
+  display_name: "Java Spring Coder"
+  short_description: "先识别项目约束再按本地风格编写 Java/Spring 代码"
+  default_prompt: "Use $java-spring-coder to inspect this project and implement the requested Java/Spring change in the local style."

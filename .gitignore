@@ -1,0 +1,32 @@
+# 项目专属记忆
+projects/
+
+# 临时文件
+tmp/
+worktrees/
+
+# 文件历史（Qwen Code内部缓存）
+file-history/
+
+# 子代理清理文件
+.subagent-cleanup-*
+
+# 文件历史清理
+.file-history-cleanup
+
+# TODO缓存
+todos/
+
+# 使用统计
+usage/
+usage_record.jsonl
+
+# 提示历史
+tip_history.json
+
+# 系统文件
+*.log
+hs_err_pid*
+
+# settings.json（含个人配置，按需保留）
+settings.json

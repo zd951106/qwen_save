@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Java&sol;Spring &#x8fd0;&#x884c;&#x671f;&#x4e13;&#x9898;</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <span id="markdown-mermaid" aria-hidden="true" data-config="{&quot;darkModeTheme&quot;:&quot;vscode&quot;,&quot;lightModeTheme&quot;:&quot;vscode&quot;,&quot;maxTextSize&quot;:50000,&quot;clickDrag&quot;:&quot;alt&quot;,&quot;showControls&quot;:&quot;onHoverOrFocus&quot;,&quot;resizable&quot;:true,&quot;maxHeight&quot;:&quot;&quot;}"></span>
+				<h1 id="javaspring-运行期专题">Java/Spring 运行期专题</h1>
+<p>本文件收录并发、缓存、配置安全、异步、消息事务、安全与性能等按需专题规则。</p>
+<h2 id="1-并发控制">1. 并发控制</h2>
+<h3 id="乐观锁推荐">乐观锁（推荐）</h3>
+<p>适用于冲突较少的场景：</p>
+<pre><code class="language-java"><span class="hljs-comment">// Entity 增加版本号</span>
+<span class="hljs-meta">@Version</span>
+<span class="hljs-keyword">private</span> Integer version;
+</code></pre>
+<p>更新时检查版本号，失败则抛出异常或重试。</p>
+<h3 id="分布式锁">分布式锁</h3>
+<p>使用 Redisson <code>RLock</code>，如果项目中有封装类则优先使用封装工具：</p>
+<ul>
+<li>设置合理的等待时间和锁超时时间</li>
+<li>在 finally 中释放锁</li>
+<li>只释放自己持有的锁 <code>lock.isHeldByCurrentThread()</code></li>
+<li>注意看门狗自动续期逻辑，确保业务耗时不超时。</li>
+</ul>
+<h2 id="2-缓存规范">2. 缓存规范</h2>
+<h3 id="key-命名">Key 命名</h3>
+<p>格式：<code>{业务}:{模块}:{标识}</code></p>
+<pre><code class="language-java"><span class="hljs-type">String</span> <span class="hljs-variable">key</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;promotion:plan:&quot;</span> + planId;
+<span class="hljs-type">String</span> <span class="hljs-variable">key</span> <span class="hljs-operator">=</span> <span class="hljs-string">&quot;user:info:&quot;</span> + userId;
+</code></pre>
+<h3 id="ttl-设置">TTL 设置</h3>
+<table>
+<thead>
+<tr>
+<th>数据类型</th>
+<th>TTL</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>热点数据</td>
+<td>1-5 分钟</td>
+<td>高频访问</td>
+</tr>
+<tr>
+<td>普通数据</td>
+<td>30 分钟</td>
+<td>一般业务数据</td>
+</tr>
+<tr>
+<td>配置数据</td>
+<td>1 小时</td>
+<td>变更少</td>
+</tr>
+<tr>
+<td>永不过期</td>
+<td>❌ <strong>禁止</strong></td>
+<td>必须设置 TTL</td>
+</tr>
+</tbody>
+</table>
+<h3 id="缓存穿透防护">缓存穿透防护</h3>
+<p>空值也缓存（短 TTL 如 5 分钟），防止缓存穿透。</p>
+<h3 id="缓存更新策略">缓存更新策略</h3>
+<p>先更新数据库，再删除缓存。</p>
+<h2 id="3-配置安全">3. 配置安全</h2>
+<p>以下配置 ❌ 禁止写在代码或本地配置文件：</p>
+<ul>
+<li>数据库密码</li>
+<li>Redis 密码</li>
+<li>第三方 API Key / Secret</li>
+<li>JWT 密钥</li>
+<li>加密盐值</li>
+</ul>
+<p>✅ 敏感配置存储在 Nacos 配置中心，按环境隔离。</p>
+<ul>
+<li>❌ 禁止在日志中打印敏感配置。</li>
+</ul>
+<h2 id="4-异步处理">4. 异步处理</h2>
+<ul>
+<li>使用 <code>@Async(&quot;线程池名&quot;)</code> 指定线程池</li>
+<li>❌ 禁止使用默认 <code>SimpleAsyncTaskExecutor</code></li>
+<li>❌ 禁止在同类中调用 <code>@Async</code> 方法（代理失效）</li>
+<li>❌ 禁止在 <code>@Async</code> 方法中使用 <code>@Transactional</code>（事务不生效）</li>
+</ul>
+<p>异步方法需要返回值时使用 <code>CompletableFuture&lt;T&gt;</code>。</p>
+<h2 id="5-分布式事务rocketmq-事务消息">5. 分布式事务（RocketMQ 事务消息）</h2>
+<p>项目使用 RocketMQ 事务消息实现最终一致性：</p>
+<ol>
+<li>发送半消息（Half Message）→ MQ 暂存，不投递</li>
+<li>执行本地事务</li>
+<li>提交/回滚 → MQ 决定投递或丢弃</li>
+<li>异常时 MQ 回查本地事务状态</li>
+</ol>
+<h3 id="关键点">关键点</h3>
+<ul>
+<li>使用 <code>@RocketMQTransactionListener(txProducerGroup = &quot;xxx&quot;)</code> 实现事务监听器</li>
+<li><code>executeLocalTransaction</code>：执行本地事务，返回 COMMIT/ROLLBACK/UNKNOWN</li>
+<li><code>checkLocalTransaction</code>：事务回查，必须实现幂等查询</li>
+<li>消费端也要做幂等（Redis 去重）</li>
+</ul>
+<h3 id="回查幂等">回查幂等</h3>
+<pre><code class="language-java"><span class="hljs-meta">@Override</span>
+<span class="hljs-keyword">public</span> RocketMQLocalTransactionState <span class="hljs-title function_">checkLocalTransaction</span><span class="hljs-params">(Message msg)</span> {
+    <span class="hljs-type">String</span> <span class="hljs-variable">bizId</span> <span class="hljs-operator">=</span> (String) msg.getHeaders().get(<span class="hljs-string">&quot;bizId&quot;</span>);
+    <span class="hljs-type">boolean</span> <span class="hljs-variable">exists</span> <span class="hljs-operator">=</span> orderMapper.existsByBizId(bizId);
+    <span class="hljs-keyword">return</span> exists ? COMMIT : ROLLBACK;
+}
+</code></pre>
+<h2 id="6-安全规范">6. 安全规范</h2>
+<h3 id="xss-防护">XSS 防护</h3>
+<ul>
+<li>全局 XssFilter 过滤请求参数</li>
+<li>富文本字段使用 Jsoup 白名单清洗</li>
+</ul>
+<h2 id="7-性能优化">7. 性能优化</h2>
+<h3 id="n1-查询">N+1 查询</h3>
+<p>❌ 禁止循环查询数据库：</p>
+<pre><code class="language-java"><span class="hljs-comment">// ❌ 错误</span>
+<span class="hljs-keyword">for</span> (Order order : orders) {
+    <span class="hljs-type">User</span> <span class="hljs-variable">user</span> <span class="hljs-operator">=</span> userMapper.selectById(order.getUserId());  <span class="hljs-comment">// N 次查询</span>
+}
+
+<span class="hljs-comment">// ✅ 正确：批量查询 + 内存关联</span>
+Set&lt;Long&gt; userIds = orders.stream().map(Order::getUserId).collect(Collectors.toSet());
+Map&lt;Long, User&gt; userMap = userMapper.selectBatchIds(userIds).stream()
+    .collect(Collectors.toMap(User::getId, u -&gt; u));
+</code></pre>
+<h3 id="深度分页">深度分页</h3>
+<p>❌ 深度分页禁止使用 OFFSET（性能差）：</p>
+<pre><code class="language-sql"><span class="hljs-comment">-- ❌ 错误</span>
+<span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> product LIMIT <span class="hljs-number">100000</span>, <span class="hljs-number">10</span>;
+
+<span class="hljs-comment">-- ✅ 正确：游标分页</span>
+<span class="hljs-keyword">SELECT</span> <span class="hljs-operator">*</span> <span class="hljs-keyword">FROM</span> product <span class="hljs-keyword">WHERE</span> id <span class="hljs-operator">&gt;</span> #{lastId} <span class="hljs-keyword">ORDER</span> <span class="hljs-keyword">BY</span> id LIMIT <span class="hljs-number">10</span>;
+</code></pre>
+<h3 id="大数据量导出">大数据量导出</h3>
+<p>使用流式查询 <code>@Options(fetchSize = 1000)</code> + 逐条写入，避免 OOM。</p>
+<h2 id="8-设计模式">8. 设计模式</h2>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>适用场景</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>策略模式</td>
+<td>多分支业务逻辑</td>
+<td>如支付方式、导出格式</td>
+</tr>
+<tr>
+<td>模板方法</td>
+<td>流程固定、步骤可变</td>
+<td>如导出流程</td>
+</tr>
+<tr>
+<td>责任链</td>
+<td>多级审批、多步校验</td>
+<td>如审批流</td>
+</tr>
+</tbody>
+</table>
+
+            
+            
+        </body>
+        </html>

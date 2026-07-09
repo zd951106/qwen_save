@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Java&sol;Spring &#x6570;&#x636e;&#x8bbf;&#x95ee;&#x4e0e;&#x4e8b;&#x52a1;&#x4e13;&#x9898;</title>
+            <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only],
+.vscode-high-contrast:not(.vscode-high-contrast-light) img[src$=\#gh-light-mode-only],
+.vscode-high-contrast-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+            
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+<style>
+:root {
+  --color-note: #0969da;
+  --color-tip: #1a7f37;
+  --color-warning: #9a6700;
+  --color-severe: #bc4c00;
+  --color-caution: #d1242f;
+  --color-important: #8250df;
+}
+
+</style>
+<style>
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-note: #2f81f7;
+    --color-tip: #3fb950;
+    --color-warning: #d29922;
+    --color-severe: #db6d28;
+    --color-caution: #f85149;
+    --color-important: #a371f7;
+  }
+}
+
+</style>
+<style>
+.markdown-alert {
+  padding: 0.5rem 1rem;
+  margin-bottom: 16px;
+  color: inherit;
+  border-left: .25em solid #888;
+}
+
+.markdown-alert>:first-child {
+  margin-top: 0
+}
+
+.markdown-alert>:last-child {
+  margin-bottom: 0
+}
+
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  font-weight: 500;
+  align-items: center;
+  line-height: 1
+}
+
+.markdown-alert .markdown-alert-title .octicon {
+  margin-right: 0.5rem;
+  display: inline-block;
+  overflow: visible !important;
+  vertical-align: text-bottom;
+  fill: currentColor;
+}
+
+.markdown-alert.markdown-alert-note {
+  border-left-color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-note .markdown-alert-title {
+  color: var(--color-note);
+}
+
+.markdown-alert.markdown-alert-important {
+  border-left-color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-important .markdown-alert-title {
+  color: var(--color-important);
+}
+
+.markdown-alert.markdown-alert-warning {
+  border-left-color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-warning .markdown-alert-title {
+  color: var(--color-warning);
+}
+
+.markdown-alert.markdown-alert-tip {
+  border-left-color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-tip .markdown-alert-title {
+  color: var(--color-tip);
+}
+
+.markdown-alert.markdown-alert-caution {
+  border-left-color: var(--color-caution);
+}
+
+.markdown-alert.markdown-alert-caution .markdown-alert-title {
+  color: var(--color-caution);
+}
+
+</style>
+        
+        </head>
+        <body class="vscode-body vscode-light">
+            <span id="markdown-mermaid" aria-hidden="true" data-config="{&quot;darkModeTheme&quot;:&quot;vscode&quot;,&quot;lightModeTheme&quot;:&quot;vscode&quot;,&quot;maxTextSize&quot;:50000,&quot;clickDrag&quot;:&quot;alt&quot;,&quot;showControls&quot;:&quot;onHoverOrFocus&quot;,&quot;resizable&quot;:true,&quot;maxHeight&quot;:&quot;&quot;}"></span>
+				<h1 id="javaspring-数据访问与事务专题">Java/Spring 数据访问与事务专题</h1>
+<p>本文件收录数据访问、对象转换、数据库设计、批量处理、事务和空安全等按需专题规则。</p>
+<h2 id="1-对象转换">1. 对象转换</h2>
+<ul>
+<li>❌ 禁止直接返回 Entity，必须转换为 DTO/Rsp</li>
+<li>优先使用 MapStruct 等性能更高的对象转换工具；如果系统没有，再考虑 <code>BeanUtils.copyProperties(source, target)</code></li>
+<li>注意：<code>BeanUtils.copyProperties</code> 是浅拷贝，嵌套对象需手动处理</li>
+</ul>
+<h2 id="2-数据库表设计规范">2. 数据库表设计规范</h2>
+<h3 id="基础字段要求">基础字段要求</h3>
+<p>实体类继承 <code>BaseDO</code> 时，建表语句<strong>必须包含</strong>以下基础字段：</p>
+<table>
+<thead>
+<tr>
+<th>字段名</th>
+<th>类型</th>
+<th>说明</th>
+<th>必须</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td><code>bigint</code></td>
+<td>主键，自增</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>reserved1</code></td>
+<td><code>int</code></td>
+<td>保留字段1</td>
+<td>否</td>
+</tr>
+<tr>
+<td><code>create_date_time</code></td>
+<td><code>datetime(3)</code></td>
+<td>创建时间</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>update_date_time</code></td>
+<td><code>datetime(3)</code></td>
+<td>更新时间</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>creator</code></td>
+<td><code>varchar(32)</code></td>
+<td>创建者</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>updater</code></td>
+<td><code>varchar(32)</code></td>
+<td>更新者</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>logic_delete_flag</code></td>
+<td><code>bigint</code></td>
+<td>逻辑状态:1-正常,其它-已删除</td>
+<td>✅</td>
+</tr>
+</tbody>
+</table>
+<h3 id="建表语句模板">建表语句模板</h3>
+<pre><code class="language-sql"><span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">TABLE</span> `table_name` (
+    `id` <span class="hljs-type">bigint</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> AUTO_INCREMENT COMMENT <span class="hljs-string">&#x27;主键&#x27;</span>,
+    <span class="hljs-comment">-- 业务字段...</span>
+    <span class="hljs-comment">-- 基础字段...</span>
+    `reserved1` <span class="hljs-type">int</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-number">0</span> COMMENT <span class="hljs-string">&#x27;保留字段1&#x27;</span>,
+    `creator` <span class="hljs-type">varchar</span>(<span class="hljs-number">32</span>) <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;&#x27;</span> COMMENT <span class="hljs-string">&#x27;创建者&#x27;</span>,
+    `create_date_time` datetime(<span class="hljs-number">3</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-built_in">CURRENT_TIMESTAMP</span> COMMENT <span class="hljs-string">&#x27;创建时间&#x27;</span>,
+    `updater` <span class="hljs-type">varchar</span>(<span class="hljs-number">32</span>) <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;&#x27;</span> COMMENT <span class="hljs-string">&#x27;更新者&#x27;</span>,
+    `update_date_time` datetime(<span class="hljs-number">3</span>) <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-built_in">CURRENT_TIMESTAMP</span> <span class="hljs-keyword">ON</span> <span class="hljs-keyword">UPDATE</span> <span class="hljs-built_in">CURRENT_TIMESTAMP</span> COMMENT <span class="hljs-string">&#x27;更新时间&#x27;</span>,
+    `logic_delete_flag` <span class="hljs-type">bigint</span> <span class="hljs-keyword">NOT</span> <span class="hljs-keyword">NULL</span> <span class="hljs-keyword">DEFAULT</span> <span class="hljs-string">&#x27;1&#x27;</span> COMMENT <span class="hljs-string">&#x27;逻辑状态:1-正常,其它-已删除&#x27;</span>,
+    <span class="hljs-keyword">PRIMARY</span> KEY (`id`)
+) ENGINE<span class="hljs-operator">=</span>InnoDB <span class="hljs-keyword">DEFAULT</span> CHARSET<span class="hljs-operator">=</span>utf8mb4 COMMENT<span class="hljs-operator">=</span><span class="hljs-string">&#x27;表注释&#x27;</span>;
+</code></pre>
+<h3 id="字段命名规范">字段命名规范</h3>
+<table>
+<thead>
+<tr>
+<th>规则</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>表名、字段名使用 <code>snake_case</code></td>
+<td><code>promotion_plan</code>、<code>create_date_time</code></td>
+</tr>
+<tr>
+<td>布尔字段使用 <code>_flag</code> 后缀</td>
+<td></td>
+</tr>
+<tr>
+<td>时间字段使用 <code>date_time</code> 后缀</td>
+<td><code>create_date_time</code>、<code>effect_time</code></td>
+</tr>
+<tr>
+<td>状态字段使用 <code>status</code></td>
+<td><code>order_status</code>、<code>approval_status</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="索引规范">索引规范</h3>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>命名规则</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>主键</td>
+<td><code>PRIMARY KEY</code></td>
+<td><code>PRIMARY KEY (id)</code></td>
+</tr>
+<tr>
+<td>唯一索引</td>
+<td><code>uk_表名_字段</code></td>
+<td><code>uk_order_order_no</code></td>
+</tr>
+<tr>
+<td>普通索引</td>
+<td><code>idx_表名_字段</code></td>
+<td><code>idx_order_user_id</code></td>
+</tr>
+<tr>
+<td>联合索引</td>
+<td><code>idx_表名_字段1_字段2</code></td>
+<td><code>idx_order_user_id_status</code></td>
+</tr>
+</tbody>
+</table>
+<pre><code class="language-sql"><span class="hljs-comment">-- 索引示例</span>
+<span class="hljs-keyword">CREATE</span> <span class="hljs-keyword">UNIQUE</span> INDEX `uk_order_order_no` <span class="hljs-keyword">ON</span> `<span class="hljs-keyword">order</span>` (`order_no`);
+<span class="hljs-keyword">CREATE</span> INDEX `idx_order_user_id` <span class="hljs-keyword">ON</span> `<span class="hljs-keyword">order</span>` (`user_id`);
+<span class="hljs-keyword">CREATE</span> INDEX `idx_order_create_date_time` <span class="hljs-keyword">ON</span> `<span class="hljs-keyword">order</span>` (`create_date_time`);
+</code></pre>
+<h2 id="3-批量处理">3. 批量处理</h2>
+<p>超过 1000 条记录必须分批处理：</p>
+<pre><code class="language-java"><span class="hljs-type">int</span> <span class="hljs-variable">batchSize</span> <span class="hljs-operator">=</span> <span class="hljs-number">1000</span>;
+<span class="hljs-keyword">for</span> (<span class="hljs-type">int</span> <span class="hljs-variable">i</span> <span class="hljs-operator">=</span> <span class="hljs-number">0</span>; i &lt; list.size(); i += batchSize) {
+    List&lt;Entity&gt; batch = list.subList(i, Math.min(i + batchSize, list.size()));
+    saveBatch(batch);
+}
+</code></pre>
+<h2 id="4-事务控制">4. 事务控制</h2>
+<h3 id="基本规则">基本规则</h3>
+<ul>
+<li>多表操作必须加 <code>@Transactional(rollbackFor = Exception.class)</code></li>
+<li>⚠️ 事务方法必须是 <code>public</code>（private 不生效）</li>
+<li>⚠️ 避免同类方法内部调用（代理失效）</li>
+<li>长事务拆分，避免锁表时间过长</li>
+<li>❌ 禁止在 <code>@Transactional</code> 方法中进行远程 RPC 调用、复杂的外部 API 请求或大文件 IO。先执行外部请求，拿到结果后再进入 <code>@Transactional</code> 方法操作数据库。或使用 <code>TransactionTemplate</code> 编程事务</li>
+<li>尽量使用手动事务，避免 <code>@Transactional</code> 方法中包含复杂的逻辑。</li>
+</ul>
+<h3 id="多数据源事务限制">多数据源事务限制</h3>
+<p><strong>⚠️ 重要</strong>：<code>@Transactional</code> 只对主数据源生效，事务方法中 ❌ 禁止混用多个数据源。</p>
+<pre><code class="language-java"><span class="hljs-comment">// ❌ 错误：事务中混用 MySQL 和 Doris</span>
+<span class="hljs-meta">@Transactional(rollbackFor = Exception.class)</span>
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">syncData</span><span class="hljs-params">()</span> {
+    <span class="hljs-comment">// Doris 查询不在事务管理范围内</span>
+    List&lt;Data&gt; dorisData = dorisMapper.selectList();
+    <span class="hljs-comment">// MySQL 写入在事务中</span>
+    mysqlMapper.saveBatch(dorisData);
+}
+
+<span class="hljs-comment">// ✅ 正确：拆分方法，事务只包裹单数据源操作</span>
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">syncData</span><span class="hljs-params">()</span> {
+    <span class="hljs-comment">// 1. 非事务方法查询 Doris</span>
+    List&lt;Data&gt; dorisData = queryFromDoris();
+    <span class="hljs-comment">// 2. 事务方法写入 MySQL</span>
+    saveToMysql(dorisData);
+}
+
+<span class="hljs-meta">@Transactional(rollbackFor = Exception.class)</span>
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">saveToMysql</span><span class="hljs-params">(List&lt;Data&gt; data)</span> {
+    mysqlMapper.saveBatch(data);
+}
+</code></pre>
+<h3 id="同类调用代理失效">同类调用代理失效</h3>
+<pre><code class="language-java"><span class="hljs-comment">// ❌ 同类调用事务不生效</span>
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">methodA</span><span class="hljs-params">()</span> {
+    <span class="hljs-built_in">this</span>.methodB();  <span class="hljs-comment">// methodB 的 @Transactional 不生效</span>
+}
+
+<span class="hljs-comment">// ✅ 正确：注入自身或拆分到另一个 Service</span>
+<span class="hljs-meta">@Autowired</span>
+<span class="hljs-keyword">private</span> ProductService self;
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">void</span> <span class="hljs-title function_">methodA</span><span class="hljs-params">()</span> {
+    self.methodB();  <span class="hljs-comment">// 通过代理调用，事务生效</span>
+}
+</code></pre>
+<h2 id="5-空安全处理">5. 空安全处理</h2>
+<pre><code class="language-java"><span class="hljs-comment">// 集合判空</span>
+<span class="hljs-keyword">if</span> (CollectionUtils.isEmpty(list)) {
+    <span class="hljs-keyword">return</span> Collections.emptyList();
+}
+
+<span class="hljs-comment">// 链式调用防空</span>
+<span class="hljs-type">String</span> <span class="hljs-variable">city</span> <span class="hljs-operator">=</span> Optional.ofNullable(user)
+    .map(User::getAddress)
+    .map(Address::getCity)
+    .orElse(<span class="hljs-string">&quot;&quot;</span>);
+</code></pre>
+
+            
+            
+        </body>
+        </html>
