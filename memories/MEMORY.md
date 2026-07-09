@@ -10,3 +10,4 @@
 - [Java/Spring编码规范技能参考](reference/java-spring-coder-skill.md) — 组长提供的编码规范+4份参考文档，编码阶段必须遵循，跨项目通用
 - [设计模板生成时加入业务理解](feedback/design-template-with-domain-insight.md) — 生成模板不只套规范，要针对特定业务场景补充专属章节
 - [整理需求/代码/笔记时分类保存到memory](feedback/organize-and-save-to-memory.md) — 整理后按类型存memory，未来"通用设计"时按类型参考生成模板
+- [个人Git仓库自动备份规则](feedback/git-auto-backup.md) — 早晨自动git push到qwen_save仓库，中午询问，换机器clone即可恢复
