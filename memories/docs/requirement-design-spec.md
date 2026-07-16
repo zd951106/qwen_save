@@ -555,15 +555,33 @@ AB测试：[是/否，对比方式，一致性校验规则] [N/A]
 - 每个处理维度开始/完成/失败时记录关键日志
 - 日志包含关键业务标识（维度ID + 日期 + 关键指标）
 - 异常日志包含完整堆栈
+- **代码关键节点必加日志**：
+  - 方法入口：记录入参（关键业务字段，不含密码/密钥等敏感信息）
+  - 外部调用前后：RPC/HTTP/DB 调用前记录请求参数，调用后记录结果或耗时
+  - 异常捕获：catch 块中记录完整异常堆栈（含业务标识）
+  - 状态变更：数据状态变化时记录变更前后值
+  - 分支逻辑：if/switch 关键分支进入时记录条件值
+- **落地模式（实践中按此模板添加）**：
+  - Controller 层：`log.info("::methodName req:{}", JSONObject.toJSONString(req))`
+  - Service 层：`log.info("::methodName 关键参数:{} 结果标识:{}", param, result)`
+  - 数据库查询结果 **（每条 Mapper 查询后必须立即记录）**：
+    - 查询条数：`log.info("::methodName db result count:{}", list.size())`
+    - 单条结果：`log.info("::methodName db Mapper调用标识 key:{} result:{}", key, JSONObject.toJSONString(result))`
+    - 空结果（预期内）：`log.warn("::methodName db 查询为空 key:{}", key)` — 如商户不存在
+    - 写入操作结果：`log.info("::methodName db insert id:{}", entity.getId())`
+  - 数量/统计：`log.info("::methodName count:{}", total)` — 查询/导出/导入操作后记录数量
+  - 异常：`log.error("业务描述", e)` — 含完整堆栈
+  - 预期失败（非异常）：`log.warn("::methodName 失败原因 key:{}", value)` — 如商户不存在
 
-**为什么重要**：traceId 串联一次执行的所有日志，便于排查。每个维度的开始/完成日志可快速定位哪个维度耗时最长或失败。关键业务标识便于在日志中搜索定位。
+**为什么重要**：traceId 串联一次执行的所有日志，便于排查。每个维度的开始/完成日志可快速定位哪个维度耗时最长或失败。关键业务标识便于在日志中搜索定位。代码中缺少关键节点日志会导致测试调试和线上排查困难。
 
 **提供方式**：
 ```
 日志框架：[如 @Slf4j]
 traceId机制：[如 MDC，入口生成/finally清理]
-关键节点日志：[维度开始/完成/失败]
+关键节点日志：[维度开始/完成/失败 ｜ 方法入口/外部调用/异常/状态变更/分支]
 日志格式：[包含维度ID + 日期 + 关键指标]
+敏感信息：[密码/密钥/完整卡号不记录，脱敏处理]
 ```
 
 ### 26. 告警策略
@@ -600,6 +618,64 @@ traceId机制：[如 MDC，入口生成/finally清理]
 命名前缀：[如 Xxx*]
 参考现有类：[如"参考 XxxServiceImpl 的结构"] [N/A]
 ```
+
+**注释规范**（与包结构同属编码规范，不单独编号）：
+
+- **默认不加注释**。命名和代码结构能表达意图时，注释是冗余的。
+- **只在"为什么"不能通过代码本身传达时加注释**：
+  - 隐藏的业务约束（如唯一性规则、数据关联链路）
+  - 反直觉的实现选择（如 hardcode、临时方案、特殊映射关系）
+  - 外部依赖的隐式约定（如配置热加载机制、Excel 解析的行列映射）
+  - 已知的 TODO 项（标注默认行为 + 替换条件）
+- **禁止加"做了什么"的重复注释**（如 `// 查询数据库`、`// 设置商户号`）
+- 注释格式：简洁一行 `// 说明`，紧跟被注释代码上方
+
+**为什么重要**：代码是唯一的真相源。注释极易过期，过期的注释比没有注释更有害。只注"为什么"可最大化信噪比——未来维护者需要理解的是设计意图和约束，而非代码字面含义。
+
+**提供方式**：
+```
+注释风格：[默认不注 ｜ 只注"为什么"（约束/反直觉/TODO）]
+```
+
+**统一响应体规范**（与包结构同属编码规范，不单独编号）：
+
+- **Controller 所有方法必须通过统一响应结构体返回**，禁止直接返回裸 DTO、Map、List、String、void 等类型
+- **复用项目现有封装类**：优先使用 waxx 公共库的 `RespBody`（Feign 接口用 `com.wpgjpay.waxx.bean.res.RespBody`）或 `ResBody`（纯 REST Controller 用 `com.wpgjpay.waxx.web.ResBody`），均包含 `code`/`msg`/`data` 三要素
+- 若项目无现成封装类，则新建，至少包含 `code`、`message`、`data` 三个字段
+- **成功响应**：`RespBody.ok(data)`，data 为实际业务数据
+- **失败响应**：`RespBody.error(msg)`，由全局异常处理器统一捕获并返回
+- **分页数据**：`PageWrapper` 整体放入 `RespBody.data` 中（而非顶层返回）
+- **文件下载**：`exportExcel` 等写 `HttpServletResponse` 流的端点保持 `void`，属于例外
+- **Service 层**：返回领域对象（Long/int/List/DTO 等），由 Controller 统一包装为 `RespBody`
+
+**统一请求体规范**（与包结构同属编码规范，不单独编号）：
+
+- **接口默认使用 POST**：在没有特殊要求的情况下，所有接口统一使用 `@PostMapping`，不区分 GET/PUT/DELETE。简化前端调用、减少跨域预检、避免 URL 长度限制
+- 出方案时若其他 HTTP 方法（如 GET 无参查询、PUT 幂等更新、DELETE 删除）语义更合适，可保留并标注让用户确认
+- **Controller 方法接收参数必须使用 `@RequestBody` 封装为请求体类**，禁止使用 `@RequestParam` 逐个接收零散参数
+- 每个接口对应的请求体类放在 `facade/req/` 包下，使用 `@Data` 注解
+- **无参方法**（如 `productList()`）：同样使用 POST，无需请求体
+- **文件上传**（`@RequestParam MultipartFile`）属于 multipart/form-data 标准模式，作为例外保留
+
+**日志落地规范**（与包结构同属编码规范，不单独编号）：
+
+- **入参日志**：方法入口第一行可执行代码立即打印，无论是否有参数，确保能定位方法被调用
+  - Controller：`log.info("::methodName req:{}", JSONObject.toJSONString(req))`
+  - Service：`log.info("::methodName req:{}", JSONObject.toJSONString(req))`
+  - 无参方法：`log.info("::methodName")` — 标记入口
+- **响应日志**：方法返回前打印，与请求日志分行
+  - Controller：`log.info("::methodName res:{}", JSONObject.toJSONString(res))`
+  - Service：`log.info("::methodName resSize:{}", size)` 或 `log.info("::methodName res id:{}", id)`
+- **Controller 无返回值**（`void`）：禁止，必须返回响应体结构
+- **Service 无返回值**（`void`）：禁止，所有方法必须有返回值（至少返回影响行数或 ID）
+- **数据库查询**：每条 Mapper/DAO 调用后立即打印查询结果
+  - 列表查询：`log.info("::methodName db result count:{}", list.size())`
+  - 单条查询：`log.info("::methodName db Mapper简称 key:{} result:{}", key, JSONObject.toJSONString(result))`
+  - 写入操作：`log.info("::methodName db insert id:{}", entity.getId())` 或 `log.info("::methodName db update count:{}", count)`
+  - 预期空值：`log.warn("::methodName db 未找到 key:{}", key)`
+- 数量/统计操作后记录数量：`log.info("::methodName count:{}", total)`
+- 异常：`log.error("业务描述", e)` — 含完整堆栈
+- 预期失败：`log.warn("::methodName 失败原因 key:{}", value)`
 
 ### 28. 异常处理策略
 
