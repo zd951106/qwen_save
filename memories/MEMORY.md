@@ -1,3 +1,7 @@
+- [设计方案和改造前必须罗列风险](feedback/list-risks-before-design.md) — 任何设计方案、代码改造任务在执行前，必须先分析并罗列风险项，让用户评估后再动手
+- [银享惠测试环境资源清单](reference/test-env-resources.md) — 测试环境所有基础资源（Nacos/Redis/MySQL/RabbitMQ/K8s/ELK等）的地址、端口、凭证，来自副本-银享惠测试环境资源需求列表.xlsx
+- [Nacos只读访问规则](feedback/nacos-readonly-access.md) — Nacos配置中心仅用于只读查询，任何修改操作必须先征求用户同意
+- [GitLab只读访问规则](feedback/gitlab-readonly-access.md) — GitLab地址和令牌仅用于只读访问，任何修改操作必须先征求用户同意
 - [实现代码时添加日志方便调试](feedback/add-logging-for-debugging.md) — 编写业务代码时在关键节点（方法入口/外部调用/异常捕获/状态变更）添加日志，方便测试和线上排查
 - [SaaS商户开通需求设计](user/saas-merchant-open-design.md) — OMS-admin + transcore-service 跨项目：商户管理下新增SaaS商户开通功能，含数据表DDL、Nacos产品配置、7个前后端接口、Vue页面结构的完整设计方案
 - [Controller统一响应体与请求体规范](feedback/unified-response-request-body.md) — 所有Controller方法必须通过RespBody/ResBody返回统一响应结构（code/message/data），所有参数通过@RequestBo…
